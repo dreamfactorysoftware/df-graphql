@@ -42,7 +42,7 @@
                 "DreamFactory\\Core\\GraphQL\\ServiceProvider"
             ],
             "aliases": {
-                "GraphQL": "DreamFactory\\Core\\GraphQL\\Support\\Facades\\GraphQL"
+                "GraphQL": "DreamFactory\\Core\\GraphQL\\Facades\\GraphQL"
             }
         }
     }
