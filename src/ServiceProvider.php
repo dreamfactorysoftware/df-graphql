@@ -24,8 +24,6 @@ class ServiceProvider extends BaseServiceProvider
         $this->bootPublishes();
 
         $this->bootRouter();
-
-        $this->bootViews();
     }
 
     /**
@@ -37,7 +35,7 @@ class ServiceProvider extends BaseServiceProvider
     {
         if ($this->app['config']->get('graphql.routes') && !$this->app->routesAreCached()) {
             $router = $this->getRouter();
-            include __DIR__.'/../routes/graphql.php';
+            include __DIR__.'/../routes/routes.php';
         }
     }
 
@@ -67,19 +65,12 @@ class ServiceProvider extends BaseServiceProvider
     protected function bootPublishes()
     {
         $configPath = __DIR__.'/../config';
-        $viewsPath = __DIR__.'/../resources/views';
 
         $this->mergeConfigFrom($configPath.'/config.php', 'graphql');
-
-        $this->loadViewsFrom($viewsPath, 'graphql');
 
         $this->publishes([
             $configPath.'/config.php' => config_path('graphql.php'),
         ], 'config');
-
-        $this->publishes([
-            $viewsPath => base_path('resources/views/vendor/graphql'),
-        ], 'views');
     }
 
     /**
@@ -109,21 +100,6 @@ class ServiceProvider extends BaseServiceProvider
 
         foreach ($schemas as $name => $schema) {
             $graphql->addSchema($name, $schema);
-        }
-    }
-
-    /**
-     * Bootstrap Views
-     *
-     * @return void
-     */
-    protected function bootViews()
-    {
-        $config = $this->app['config'];
-
-        if ($config->get('graphql.graphiql', true)) {
-            $view = $config->get('graphql.graphiql.view', 'graphql::graphiql');
-            $this->app['view']->composer($view, View\GraphiQLComposer::class);
         }
     }
 

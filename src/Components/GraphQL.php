@@ -1,5 +1,6 @@
 <?php namespace DreamFactory\Core\GraphQL\Components;
 
+use DreamFactory\Core\GraphQL\Exception\TypeNotFound;
 use GraphQL\GraphQL as GraphQLBase;
 use GraphQL\Schema;
 use GraphQL\Error\Error;
@@ -8,6 +9,7 @@ use DreamFactory\Core\GraphQL\Error\ValidationError;
 use DreamFactory\Core\GraphQL\Events\SchemaAdded;
 use DreamFactory\Core\GraphQL\Events\TypeAdded;
 use DreamFactory\Core\GraphQL\Exception\SchemaNotFound;
+use ServiceManager;
 
 class GraphQL
 {
@@ -29,13 +31,27 @@ class GraphQL
 
         $this->clearTypeInstances();
 
-        $schemaName = is_string($schema) ? $schema:config('graphql.schema', 'default');
+        $schemaName = is_string($schema) ? $schema : config('graphql.schema', 'default');
 
-        if (!is_array($schema) && !isset($this->schemas[$schemaName])) {
-            throw new SchemaNotFound('Type '.$schemaName.' not found.');
+        $schema = is_array($schema) ? $schema : $this->schemas[$schemaName];
+
+        if (empty($schema)) {
+            try {
+                if (empty($schemaName)) {
+                    $schema = [
+                        'query' => [
+                            'services'      => 'DreamFactory\Core\GraphQL\Query\Services',
+                            'service_types' => 'DreamFactory\Core\GraphQL\Query\ServiceTypes',
+                        ],
+                    ];
+                } else {
+                    $schemaName = strtolower($schemaName);
+                    $schema = ServiceManager::getService($schemaName)->getGraphQLSchema();
+                }
+            } catch (\Exception $e) {
+                throw new SchemaNotFound('Type ' . $schemaName . ' not found.');
+            }
         }
-
-        $schema = is_array($schema) ? $schema:$this->schemas[$schemaName];
 
         $schemaQuery = array_get($schema, 'query', []);
         $schemaMutation = array_get($schema, 'mutation', []);
@@ -46,7 +62,7 @@ class GraphQL
         $types = [];
         if (sizeof($schemaTypes)) {
             foreach ($schemaTypes as $name => $type) {
-                $objectType = $this->objectType($type, is_numeric($name) ? []:[
+                $objectType = $this->objectType($type, is_numeric($name) ? [] : [
                     'name' => $name
                 ]);
                 $this->typesInstances[$name] = $objectType;
@@ -71,17 +87,17 @@ class GraphQL
         ]);
 
         return new Schema([
-            'query' => $query,
-            'mutation' => !empty($schemaMutation) ? $mutation : null,
+            'query'        => $query,
+            'mutation'     => !empty($schemaMutation) ? $mutation : null,
             'subscription' => !empty($schemaSubscription) ? $subscription : null,
-            'types' => $types
+            'types'        => $types
         ]);
     }
 
     public function type($name, $fresh = false)
     {
         if (!isset($this->types[$name])) {
-//            throw new TypeNotFound('Type '.$name.' not found.');
+            throw new TypeNotFound('Type '.$name.' not found.');
         }
 
         if (!$fresh && isset($this->typesInstances[$name])) {
@@ -130,7 +146,7 @@ class GraphQL
             $errorFormatter = config('graphql.error_formatter', [self::class, 'formatError']);
 
             return [
-                'data' => $result->data,
+                'data'   => $result->data,
                 'errors' => array_map($errorFormatter, $result->errors)
             ];
         } else {
@@ -157,7 +173,7 @@ class GraphQL
     public function addTypes($types)
     {
         foreach ($types as $name => $type) {
-            $this->addType($type, is_numeric($name) ? null:$name);
+            $this->addType($type, is_numeric($name) ? null : $name);
         }
     }
 
@@ -234,11 +250,11 @@ class GraphQL
         foreach ($fields as $name => $field) {
             if (is_string($field)) {
                 $field = $this->app->make($field);
-                $name = is_numeric($name) ? $field->name:$name;
+                $name = is_numeric($name) ? $field->name : $name;
                 $field->name = $name;
                 $field = $field->toArray();
             } else {
-                $name = is_numeric($name) ? $field['name']:$name;
+                $name = is_numeric($name) ? $field['name'] : $name;
                 $field['name'] = $name;
             }
             $typeFields[$name] = $field;
@@ -255,7 +271,8 @@ class GraphQL
             return $name;
         }
 
-        $type = is_object($class) ? $class:$this->app->make($class);
+        $type = is_object($class) ? $class : $this->app->make($class);
+
         return $type->name;
     }
 

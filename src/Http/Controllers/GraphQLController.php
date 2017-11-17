@@ -2,9 +2,7 @@
 
 namespace DreamFactory\Core\GraphQL\Http\Controllers;
 
-use DreamFactory\Core\Utility\ResponseFactory;
 use Illuminate\Http\Request;
-use ServiceManager;
 
 class GraphQLController extends Controller
 {
@@ -59,14 +57,6 @@ class GraphQLController extends Controller
         return response()->json($data, 200, $headers, $options);
     }
 
-    public function graphiql(Request $request, $schema = null)
-    {
-        $view = config('graphql.graphiql.view', 'graphql::graphiql');
-        return view($view, [
-            'schema' => $schema,
-        ]);
-    }
-
     protected function executeQuery($schema, $input)
     {
         $variablesInputName = config('graphql.variables_input_name', 'variables');
@@ -78,42 +68,12 @@ class GraphQLController extends Controller
         $operationName = array_get($input, 'operationName');
         $context = $this->queryContext($query, $variables, $schema);
         $root = null;
-//        return app('graphql')->query($query, $variables, [
-//            'context' => $context,
-//            'schema' => $schema,
-//            'operationName' => $operationName
-//        ]);
 
-        try {
-            if (empty($schema)) {
-                $schema = $this->schema([
-                    'query' => [
-                        'services'      => 'DreamFactory\Core\GraphQL\Query\Services',
-                        'service_types' => 'DreamFactory\Core\GraphQL\Query\ServiceTypes',
-                    ],
-                ]);
-            } else {
-                $schema = strtolower($schema);
-                $schema = ServiceManager::getService($schema)->getGraphQLSchema();
-                $schema = $this->schema($schema);
-            }
-
-            $result = GraphQLBase::executeAndReturnResult($schema, $query, $root, $context, $variables, $operationName);
-            if (!empty($result->errors)) {
-                $errorFormatter = config('graphql.error_formatter', [self::class, 'formatError']);
-
-                return [
-                    'data'   => $result->data,
-                    'errors' => array_map($errorFormatter, $result->errors)
-                ];
-            } else {
-                return [
-                    'data' => $result->data
-                ];
-            }
-        } catch (\Exception $e) {
-            return ResponseFactory::sendException($e);
-        }
+        return app('graphql')->query($query, $variables, [
+            'context'       => $context,
+            'schema'        => $schema,
+            'operationName' => $operationName
+        ]);
     }
 
     protected function queryContext($query, $variables, $schema)

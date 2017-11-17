@@ -18,17 +18,7 @@ $router->group(array(
         $mutationRoute = $routes;
     }
 
-    //Get controllers from config
-    $controllers = config('graphql.controllers', '\DreamFactory\Core\GraphQL\GraphQLController@query');
-    $queryController = null;
-    $mutationController = null;
-    if (is_array($controllers)) {
-        $queryController = array_get($controllers, 'query', null);
-        $mutationController = array_get($controllers, 'mutation', null);
-    } else {
-        $queryController = $controllers;
-        $mutationController = $controllers;
-    }
+    $controller = '\DreamFactory\Core\GraphQL\Http\Controllers\GraphQLController@query';
 
     //Query
     if ($queryRoute) {
@@ -38,28 +28,28 @@ $router->group(array(
         ) {
             $router->get(preg_replace($schemaParameterPattern, '', $queryRoute), array(
                 'as' => 'graphql.query',
-                'uses' => $queryController
+                'uses' => $controller
             ));
             $router->get(preg_replace($schemaParameterPattern, '{graphql_schema}', $queryRoute), array(
                 'as' => 'graphql.query.with_schema',
-                'uses' => $queryController
+                'uses' => $controller
             ));
             $router->post(preg_replace($schemaParameterPattern, '', $queryRoute), array(
                 'as' => 'graphql.query.post',
-                'uses' => $queryController
+                'uses' => $controller
             ));
             $router->post(preg_replace($schemaParameterPattern, '{graphql_schema}', $queryRoute), array(
                 'as' => 'graphql.query.post.with_schema',
-                'uses' => $queryController
+                'uses' => $controller
             ));
         } else {
             $router->get($queryRoute, array(
                 'as' => 'graphql.query',
-                'uses' => $queryController
+                'uses' => $controller
             ));
             $router->post($queryRoute, array(
                 'as' => 'graphql.query.post',
-                'uses' => $queryController
+                'uses' => $controller
             ));
         }
     }
@@ -72,56 +62,29 @@ $router->group(array(
         ) {
             $router->post(preg_replace($schemaParameterPattern, '', $mutationRoute), array(
                 'as' => 'graphql.mutation',
-                'uses' => $mutationController
+                'uses' => $controller
             ));
             $router->post(preg_replace($schemaParameterPattern, '{graphql_schema}', $mutationRoute), array(
                 'as' => 'graphql.mutation.with_schema',
-                'uses' => $mutationController
+                'uses' => $controller
             ));
             $router->get(preg_replace($schemaParameterPattern, '', $mutationRoute), array(
                 'as' => 'graphql.mutation.get',
-                'uses' => $mutationController
+                'uses' => $controller
             ));
             $router->get(preg_replace($schemaParameterPattern, '{graphql_schema}', $mutationRoute), array(
                 'as' => 'graphql.mutation.get.with_schema',
-                'uses' => $mutationController
+                'uses' => $controller
             ));
         } else {
             $router->post($mutationRoute, array(
                 'as' => 'graphql.mutation',
-                'uses' => $mutationController
+                'uses' => $controller
             ));
             $router->get($mutationRoute, array(
                 'as' => 'graphql.mutation.get',
-                'uses' => $mutationController
+                'uses' => $controller
             ));
         }
     }
 });
-
-//GraphiQL
-$graphiQL = config('graphql.graphiql', true);
-if ($graphiQL) {
-    $graphiQLRoute = config('graphql.graphiql.routes', 'graphiql');
-    $graphiQLController = config('graphql.graphiql.controller', '\DreamFactory\Core\GraphQL\GraphQLController@graphiql');
-    if (!$router instanceof \Illuminate\Routing\Router &&
-        preg_match($schemaParameterPattern, $graphiQLRoute)
-    ) {
-        $router->get(preg_replace($schemaParameterPattern, '', $graphiQLRoute), [
-            'as' => 'graphql.graphiql',
-            'middleware' => config('graphql.graphiql.middleware', []),
-            'uses' => $graphiQLController
-        ]);
-        $router->get(preg_replace($schemaParameterPattern, '{graphql_schema}', $graphiQLRoute), [
-            'as' => 'graphql.graphiql.with_schema',
-            'middleware' => config('graphql.graphiql.middleware', []),
-            'uses' => $graphiQLController
-        ]);
-    } else {
-        $router->get($graphiQLRoute, [
-            'as' => 'graphql.graphiql',
-            'middleware' => config('graphql.graphiql.middleware', []),
-            'uses' => $graphiQLController
-        ]);
-    }
-}
