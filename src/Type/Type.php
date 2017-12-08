@@ -1,13 +1,12 @@
 <?php
 
-namespace DreamFactory\Core\GraphQL\Support;
+namespace DreamFactory\Core\GraphQL\Type;
 
 use GraphQL\Type\Definition\EnumType;
 use Illuminate\Support\Fluent;
 
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\InputObjectType;
-use GraphQL\Type\Definition\InterfaceType;
 
 class Type extends Fluent
 {

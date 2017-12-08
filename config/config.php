@@ -20,7 +20,6 @@ return [
      * 'routes' => [
      *     'query' => 'query/{graphql_schema?}',
      *     'mutation' => 'mutation/{graphql_schema?}',
-     *      mutation' => 'graphiql'
      * ]
      *
      * you can also disable routes by setting routes to null
@@ -28,20 +27,6 @@ return [
      * 'routes' => null,
      */
     'routes' => '{graphql_schema?}',
-
-    /*
-     * The controller to use in GraphQL requests. Either a string that will apply
-     * to both query and mutation or an array containing the key 'query' and/or
-     * 'mutation' with the according Controller and method
-     *
-     * Example:
-     *
-     * 'controllers' => [
-     *     'query' => '\DreamFactory\Core\GraphQL\GraphQLController@query',
-     *     'mutation' => '\DreamFactory\Core\GraphQL\GraphQLController@mutation'
-     * ]
-     */
-    'controllers' => \DreamFactory\Core\GraphQL\GraphQLController::class.'@query',
 
     /*
      * The name of the input variable that contain variables when you query the
@@ -72,17 +57,6 @@ return [
      * See http://php.net/manual/function.json-encode.php for the full list of options
      */
     'json_encoding_options' => 0,
-
-    /*
-     * Config for GraphiQL (see (https://github.com/graphql/graphiql).
-     * To dissable GraphiQL, set this to null
-     */
-    'graphiql' => [
-        'routes' => '/graphiql/{graphql_schema?}',
-        'controller' => \DreamFactory\Core\GraphQL\GraphQLController::class.'@graphiql',
-        'middleware' => [],
-        'view' => 'graphql::graphiql'
-    ],
 
     /*
      * The name of the default schema used when no arguments are provided
@@ -117,12 +91,13 @@ return [
      */
     'schemas' => [
         'default' => [
-            'query'    => [
+            'query' => [
+
             ],
             'mutation' => [
 
-            ],
-        ],
+            ]
+        ]
     ],
 
     /*
@@ -144,19 +119,6 @@ return [
     'types' => [
 
     ],
-
-    /*
-     * This callable will receive all the Exception objects that are caught by GraphQL.
-     * The method should return an array representing the error.
-     *
-     * Typically:
-     *
-     * [
-     *     'message' => '',
-     *     'locations' => []
-     * ]
-     */
-    'error_formatter' => [\DreamFactory\Core\GraphQL\GraphQL::class, 'formatError'],
 
     /*
      * Options to limit the query complexity and depth. See the doc

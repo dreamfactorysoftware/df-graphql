@@ -1,6 +1,6 @@
 <?php
 
-namespace DreamFactory\Core\GraphQL\Support;
+namespace DreamFactory\Core\GraphQL\Type;
 
 use GraphQL\Type\Definition\UnionType as UnionObjectType;
 

@@ -30,9 +30,9 @@ class GraphQLController extends Controller
         $isBatch = !$request->has('query');
         $inputs = $request->all();
 
-//        if (!$schema) {
-//            $schema = config('graphql.schema');
-//        }
+        if (!$schema) {
+            $schema = config('graphql.schema');
+        }
 
         if (!$isBatch) {
             $data = $this->executeQuery($schema, $inputs);

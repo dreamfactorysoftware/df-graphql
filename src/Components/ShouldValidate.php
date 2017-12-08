@@ -1,6 +1,6 @@
 <?php
 
-namespace DreamFactory\Core\GraphQL\Traits;
+namespace DreamFactory\Core\GraphQL\Components;
 
 use DreamFactory\Core\GraphQL\Error\ValidationError;
 

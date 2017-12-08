@@ -1,6 +1,6 @@
 <?php
 
-namespace DreamFactory\Core\GraphQL\Support;
+namespace DreamFactory\Core\GraphQL\Components;
 
 use Illuminate\Support\Fluent;
 use DreamFactory\Core\GraphQL\Error\AuthorizationError;
