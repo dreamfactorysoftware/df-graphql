@@ -6,7 +6,7 @@ use DreamFactory\Core\Models\BaseModel;
 use GraphQL\Type\Definition\ResolveInfo;
 use GraphQL\Type\Definition\Type;
 
-class BaseListModelQuery extends BaseListQuery
+class BaseListModelQuery extends BaseQuery
 {
     public function args()
     {

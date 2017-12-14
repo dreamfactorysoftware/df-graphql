@@ -3,11 +3,12 @@
 namespace DreamFactory\Core\GraphQL\Components;
 
 use DreamFactory\Core\Enums\Verbs;
+use DreamFactory\Core\GraphQL\Contracts\GraphQLHandlerInterface;
 use DreamFactory\Core\GraphQL\Error\ValidationError;
 use DreamFactory\Core\GraphQL\Events\SchemaAdded;
 use DreamFactory\Core\GraphQL\Events\TypeAdded;
 use DreamFactory\Core\GraphQL\Exception\TypeNotFound;
-use DreamFactory\Core\GraphQL\Query\BaseListQuery;
+use DreamFactory\Core\GraphQL\Query\BaseQuery;
 use DreamFactory\Core\GraphQL\Type\BaseType;
 use DreamFactory\Core\Services\ServiceType;
 use DreamFactory\Core\Utility\ServiceRequest;
@@ -33,6 +34,11 @@ class GraphQL
         $this->app = $app;
     }
 
+    /**
+     * @param null $schema
+     * @return Schema
+     * @throws TypeNotFound
+     */
     public function schema($schema = null)
     {
         if ($schema instanceof Schema) {
@@ -46,9 +52,9 @@ class GraphQL
             if (!isset($this->schemas[$schemaName]) || empty($schema = $this->schemas[$schemaName])) {
                 $schema = $this->buildDefaultSchema();
                 foreach (ServiceManager::getServiceNames(true) as $serviceName) {
-                    $service = ServiceManager::getService(strtolower($serviceName));
-                    if (method_exists($service, 'getGraphQLSchema')) {
-                        try {
+                    try {
+                        $service = ServiceManager::getService(strtolower($serviceName));
+                        if ($service instanceof GraphQLHandlerInterface) {
                             $content = $service->getGraphQLSchema();
                             if (isset($content['query'])) {
                                 $schema['query'] = array_merge((array)array_get($schema, 'query'),
@@ -62,10 +68,10 @@ class GraphQL
                                 $schema['types'] = array_merge((array)array_get($schema, 'types'),
                                     (array)$content['types']);
                             }
-                        } catch (\Exception $e) {
-                            \Log::debug('Service ' . $serviceName . ' failed to build GraphQL schema. ' . $e->getMessage());
-//                            throw new InternalServerErrorException('Service ' . $serviceName . ' failed to build GraphQL schema. ' . $e->getMessage());
                         }
+                    } catch (\Exception $e) {
+                        \Log::debug('Service ' . $serviceName . ' failed to build GraphQL schema. ' . $e->getMessage());
+//                      throw new InternalServerErrorException('Service ' . $serviceName . ' failed to build GraphQL schema. ' . $e->getMessage());
                     }
                 }
             }
@@ -113,10 +119,42 @@ class GraphQL
         ]);
     }
 
+    /**
+     * @param string $name
+     * @param bool   $fresh
+     * @return ObjectType|mixed|null
+     * @throws TypeNotFound
+     */
     public function type($name, $fresh = false)
     {
+        if ((strlen($name) - 1) === strrpos($name, '!')) {
+            return Type::nonNull($this->type(rtrim($name, '!')));
+        }
+
+        if (0 === strpos($name, '[')) {
+            return Type::listOf($this->type(trim($name, '[]')));
+        }
+
         if (!isset($this->types[$name])) {
-            throw new TypeNotFound('Type ' . $name . ' not found.');
+            switch (strtolower($name)) {
+                case 'string':
+                    $this->types[$name] = Type::STRING;
+                    break;
+                case 'boolean':
+                    $this->types[$name] = Type::BOOLEAN;
+                    break;
+                case 'int':
+                    $this->types[$name] = Type::INT;
+                    break;
+                case 'float':
+                    $this->types[$name] = Type::FLOAT;
+                    break;
+                case 'id':
+                    $this->types[$name] = Type::ID;
+                    break;
+                default:
+                    throw new TypeNotFound('Type ' . $name . ' not found.');
+            }
         }
 
         if (!$fresh && isset($this->typesInstances[$name])) {
@@ -151,7 +189,26 @@ class GraphQL
         } elseif (is_array($type)) {
             $objectType = $this->buildObjectTypeFromFields($type, $opts);
         } else {
-            $objectType = $this->buildObjectTypeFromClass($type, $opts);
+            switch ($type) {
+                case Type::STRING:
+                    $objectType = Type::string();
+                    break;
+                case Type::BOOLEAN:
+                    $objectType = Type::boolean();
+                    break;
+                case Type::INT:
+                    $objectType = Type::int();
+                    break;
+                case Type::FLOAT:
+                    $objectType = Type::float();
+                    break;
+                case Type::ID:
+                    $objectType = Type::id();
+                    break;
+                default:
+                    $objectType = $this->buildObjectTypeFromClass($type, $opts);
+                    break;
+            }
         }
 
         return $objectType;
@@ -314,12 +371,12 @@ class GraphQL
     protected function buildDefaultSchema()
     {
         $queries = [
-            'getServices'     => new BaseListQuery([
+            'getServices'     => new BaseQuery([
                 'name'    => 'getServices',
-                'type'    => 'service',
+                'type'    => '[service]',
                 'args'    => [
-                    'type' => ['name' => 'type', 'type' => Type::string()],
-                    'group' => ['name' => 'group', 'type' => Type::string()],
+                    'type'  => ['name' => 'type', 'type' => Type::STRING],
+                    'group' => ['name' => 'group', 'type' => Type::STRING],
                 ],
                 'resolve' => function ($root, $args, $context, ResolveInfo $info) {
                     $request = new ServiceRequest();
@@ -358,11 +415,11 @@ class GraphQL
                     return $services;
                 },
             ]),
-            'getServiceTypes' => new BaseListQuery([
+            'getServiceTypes' => new BaseQuery([
                 'name'    => 'getServiceTypes',
-                'type'    => 'service_type',
+                'type'    => '[service_type]',
                 'args'    => [
-                    'group' => ['name' => 'group', 'type' => Type::string()],
+                    'group' => ['name' => 'group', 'type' => Type::STRING],
                 ],
                 'resolve' => function ($root, $args, $context, ResolveInfo $info) {
                     $request = new ServiceRequest();

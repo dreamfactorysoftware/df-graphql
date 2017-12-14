@@ -52,7 +52,7 @@ class ServiceProvider extends BaseServiceProvider
             $router = $this->getRouter();
             if (method_exists($router, 'pattern')) {
                 $schemaNames = array_keys($graphql->getSchemas());
-//                $router->pattern('graphql_schema', '('.implode('|', $schemaNames).')');
+                $router->pattern('graphql_schema', '('.implode('|', $schemaNames).')');
             }
         });
     }

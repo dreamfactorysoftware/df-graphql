@@ -8,7 +8,8 @@ interface GraphQLHandlerInterface
 {
     /**
      *
+     * @param bool $refresh
      * @return array
      */
-    public function getGraphQLSchema();
+    public function getGraphQLSchema($refresh = false);
 }
