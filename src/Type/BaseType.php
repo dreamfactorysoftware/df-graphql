@@ -12,12 +12,6 @@ use ServiceManager;
 
 class BaseType extends GraphQLType
 {
-    /*
-    * Uncomment following line to make the type input object.
-    * http://graphql.org/learn/schema/#input-types
-    */
-    // protected $inputObject = true;
-
     public static function convertType($type, $sub = null)
     {
         switch ($type) {
@@ -100,7 +94,7 @@ class BaseType extends GraphQLType
         if ($schema) {
             foreach ($schema->getColumns(true) as $name => $column) {
                 $type = static::convertType($column->type);
-                if (!$column->allowNull) {
+                if ($column->getRequired()) {
                     $type = Type::nonNull($type);
                 }
                 $out[$name] = ['name' => $name, 'type' => $type, 'description' => $column->description];
@@ -109,6 +103,9 @@ class BaseType extends GraphQLType
                 $refTable = $relation->refTable;
                 $refService = ServiceManager::getServiceNameById($relation->refServiceId);
                 $refTable = $refService . '_table_' . $refTable;
+                if ($this->inputObject) {
+                    $refTable .= '_input';
+                }
                 switch ($relation->type) {
                     case RelationSchema::BELONGS_TO:
                         $type = GraphQL::type($refTable);

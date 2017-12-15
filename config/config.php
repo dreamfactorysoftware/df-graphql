@@ -38,7 +38,7 @@ return [
     /*
      * Any middleware for the 'graphql' route group
      */
-    'middleware' => [],
+    'middleware' => ['df.auth_check', 'df.access_check'],
 
     /**
      * Any middleware for a specific 'graphql' schema
@@ -90,14 +90,6 @@ return [
      * ]
      */
     'schemas' => [
-        'default' => [
-            'query' => [
-
-            ],
-            'mutation' => [
-
-            ]
-        ]
     ],
 
     /*
