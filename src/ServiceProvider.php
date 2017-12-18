@@ -9,11 +9,6 @@ use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
 {
-    protected function getRouter()
-    {
-        return $this->app['router'];
-    }
-
     /**
      * Bootstrap any application services.
      *
@@ -33,8 +28,8 @@ class ServiceProvider extends BaseServiceProvider
      */
     protected function bootRouter()
     {
+        /** @noinspection PhpUndefinedMethodInspection */
         if (!$this->app->routesAreCached()) {
-            $router = $this->getRouter();
             include __DIR__ . '/../routes/routes.php';
         }
     }
