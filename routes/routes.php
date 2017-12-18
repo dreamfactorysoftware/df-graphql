@@ -1,8 +1,8 @@
 <?php
 
-$router->prefix(config('graphql.prefix'))
+Route::prefix(config('graphql.prefix'))
     ->middleware(['df.auth_check', 'df.access_check'])
-    ->group(function ($router) {
+    ->group(function () {
         // Get routes from config
         $routes = config('graphql.routes');
         $queryRoute = null;
@@ -19,14 +19,14 @@ $router->prefix(config('graphql.prefix'))
 
         // Query
         if (isset($queryRoute)) {
-            $router->get($queryRoute, ['as' => 'graphql.query', 'uses' => $controller . '@query']);
-            $router->post($queryRoute, ['as' => 'graphql.query.post', 'uses' => $controller . '@query']);
+            Route::get($queryRoute, ['as' => 'graphql.query', 'uses' => $controller . '@query']);
+            Route::post($queryRoute, ['as' => 'graphql.query.post', 'uses' => $controller . '@query']);
         }
 
         // Mutation routes (define only if different than query)
         if (isset($mutationRoute) && ($mutationRoute !== $queryRoute)) {
-            $router->post($mutationRoute, ['as' => 'graphql.mutation', 'uses' => $controller . '@query']);
-            $router->get($mutationRoute, ['as' => 'graphql.mutation.get', 'uses' => $controller . '@query']);
+            Route::post($mutationRoute, ['as' => 'graphql.mutation', 'uses' => $controller . '@query']);
+            Route::get($mutationRoute, ['as' => 'graphql.mutation.get', 'uses' => $controller . '@query']);
         }
     }
     );
