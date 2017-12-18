@@ -43,7 +43,7 @@ class LumenServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function registerGraphQL()
+    public function register()
     {
         static $registered = false;
         // Check if facades are activated
@@ -52,6 +52,6 @@ class LumenServiceProvider extends ServiceProvider
             $registered = true;
         }
 
-        parent::registerGraphQL();
+        parent::register();
     }
 }

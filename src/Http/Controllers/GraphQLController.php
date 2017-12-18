@@ -6,40 +6,17 @@ use Illuminate\Http\Request;
 
 class GraphQLController extends Controller
 {
-    public function __construct(Request $request)
-    {
-        $route = $request->route();
-        $defaultSchema = config('graphql.schema');
-        if (is_array($route)) {
-            $schema = array_get($route, '2.graphql_schema', $defaultSchema);
-        } elseif (is_object($route)) {
-            $schema = $route->parameter('graphql_schema', $defaultSchema);
-        } else {
-            $schema = $defaultSchema;
-        }
-
-        $middleware = config('graphql.middleware_schema.' . $schema, null);
-
-        if ($middleware) {
-            $this->middleware($middleware);
-        }
-    }
-
-    public function query(Request $request, $schema = null)
+    public function query(Request $request)
     {
         $isBatch = !$request->has('query');
         $inputs = $request->all();
 
-        if (!$schema) {
-            $schema = config('graphql.schema');
-        }
-
         if (!$isBatch) {
-            $data = $this->executeQuery($schema, $inputs);
+            $data = $this->executeQuery($inputs);
         } else {
             $data = [];
             foreach ($inputs as $input) {
-                $data[] = $this->executeQuery($schema, $input);
+                $data[] = $this->executeQuery($input);
             }
         }
 
@@ -57,7 +34,7 @@ class GraphQLController extends Controller
         return response()->json($data, 200, $headers, $options);
     }
 
-    protected function executeQuery($schema, $input)
+    protected function executeQuery($input)
     {
         $variablesInputName = config('graphql.variables_input_name', 'variables');
         $query = array_get($input, 'query');
@@ -66,17 +43,16 @@ class GraphQLController extends Controller
             $variables = json_decode($variables, true);
         }
         $operationName = array_get($input, 'operationName');
-        $context = $this->queryContext($query, $variables, $schema);
+        $context = $this->queryContext($query, $variables);
         $root = null;
 
         return app('graphql')->query($query, $variables, [
             'context'       => $context,
-            'schema'        => $schema,
             'operationName' => $operationName
         ]);
     }
 
-    protected function queryContext($query, $variables, $schema)
+    protected function queryContext($query, $variables)
     {
         try {
             return app('auth')->user();

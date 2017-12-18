@@ -12,6 +12,16 @@ use ServiceManager;
 
 class BaseType extends GraphQLType
 {
+    protected $setRequired = false;
+
+    public function __construct($attributes = [])
+    {
+        $this->inputObject = array_get_bool($attributes, 'for_input');
+        $this->setRequired = array_get_bool($attributes, 'set_required');
+
+        parent::__construct(array_except($attributes, ['set_required', 'for_input']));
+    }
+
     public static function convertType($type, $sub = null)
     {
         switch ($type) {
@@ -73,7 +83,7 @@ class BaseType extends GraphQLType
                     continue 1; // todo breaking!
                 }
                 $field['type'] = static::convertType(array_get($field, 'type'), array_get($field, 'items.type'));
-                if (array_get_bool($field, 'required')) {
+                if ($this->setRequired && array_get_bool($field, 'required')) {
                     $field['type'] = Type::nonNull($field['type']);
                 }
             }
@@ -94,7 +104,7 @@ class BaseType extends GraphQLType
         if ($schema) {
             foreach ($schema->getColumns(true) as $name => $column) {
                 $type = static::convertType($column->type);
-                if ($column->getRequired()) {
+                if ($this->setRequired && $column->getRequired()) {
                     $type = Type::nonNull($type);
                 }
                 $out[$name] = ['name' => $name, 'type' => $type, 'description' => $column->description];

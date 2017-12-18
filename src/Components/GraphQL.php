@@ -5,8 +5,6 @@ namespace DreamFactory\Core\GraphQL\Components;
 use DreamFactory\Core\Enums\Verbs;
 use DreamFactory\Core\GraphQL\Contracts\GraphQLHandlerInterface;
 use DreamFactory\Core\GraphQL\Error\ValidationError;
-use DreamFactory\Core\GraphQL\Events\SchemaAdded;
-use DreamFactory\Core\GraphQL\Events\TypeAdded;
 use DreamFactory\Core\GraphQL\Exception\TypeNotFound;
 use DreamFactory\Core\GraphQL\Query\BaseQuery;
 use DreamFactory\Core\GraphQL\Type\BaseType;
@@ -35,45 +33,35 @@ class GraphQL
     }
 
     /**
-     * @param null $schema
      * @return Schema
      * @throws TypeNotFound
      */
-    public function schema($schema = null)
+    public function schema()
     {
-        if ($schema instanceof Schema) {
-            return $schema;
-        }
-
         $this->clearTypeInstances();
 
-        if (!is_array($schema)) {
-            $schemaName = (empty($schema) ? config('graphql.schema', 'default') : $schema);
-            if (!isset($this->schemas[$schemaName]) || empty($schema = $this->schemas[$schemaName])) {
-                $schema = $this->buildDefaultSchema();
-                foreach (ServiceManager::getServiceNames(true) as $serviceName) {
-                    try {
-                        $service = ServiceManager::getService(strtolower($serviceName));
-                        if ($service instanceof GraphQLHandlerInterface) {
-                            $content = $service->getGraphQLSchema();
-                            if (isset($content['query'])) {
-                                $schema['query'] = array_merge((array)array_get($schema, 'query'),
-                                    (array)$content['query']);
-                            }
-                            if (isset($content['mutation'])) {
-                                $schema['mutation'] = array_merge((array)array_get($schema, 'mutation'),
-                                    (array)$content['mutation']);
-                            }
-                            if (isset($content['types'])) {
-                                $schema['types'] = array_merge((array)array_get($schema, 'types'),
-                                    (array)$content['types']);
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        \Log::debug('Service ' . $serviceName . ' failed to build GraphQL schema. ' . $e->getMessage());
-//                      throw new InternalServerErrorException('Service ' . $serviceName . ' failed to build GraphQL schema. ' . $e->getMessage());
+        $schema = $this->buildDefaultSchema();
+        foreach (ServiceManager::getServiceNames(true) as $serviceName) {
+            try {
+                $service = ServiceManager::getService(strtolower($serviceName));
+                if ($service instanceof GraphQLHandlerInterface) {
+                    $content = $service->getGraphQLSchema();
+                    if (isset($content['query'])) {
+                        $schema['query'] = array_merge((array)array_get($schema, 'query'),
+                            (array)$content['query']);
+                    }
+                    if (isset($content['mutation'])) {
+                        $schema['mutation'] = array_merge((array)array_get($schema, 'mutation'),
+                            (array)$content['mutation']);
+                    }
+                    if (isset($content['types'])) {
+                        $schema['types'] = array_merge((array)array_get($schema, 'types'),
+                            (array)$content['types']);
                     }
                 }
+            } catch (\Exception $e) {
+                \Log::debug('Service ' . $serviceName . ' failed to build GraphQL schema. ' . $e->getMessage());
+//                      throw new InternalServerErrorException('Service ' . $serviceName . ' failed to build GraphQL schema. ' . $e->getMessage());
             }
         }
 
@@ -218,10 +206,9 @@ class GraphQL
     {
         $root = array_get($opts, 'root', null);
         $context = array_get($opts, 'context', null);
-        $schemaName = array_get($opts, 'schema', null);
         $operationName = array_get($opts, 'operationName', null);
 
-        $schema = $this->schema($schemaName);
+        $schema = $this->schema();
 
         $result = GraphQLBase::executeAndReturnResult($schema, $query, $root, $context, $variables, $operationName);
 
@@ -250,15 +237,11 @@ class GraphQL
     {
         $name = $this->getTypeName($class, $name);
         $this->types[$name] = $class;
-
-        event(new TypeAdded($class, $name));
     }
 
     public function addSchema($name, $schema)
     {
         $this->schemas[$name] = $schema;
-
-        event(new SchemaAdded($schema, $name));
     }
 
     public function clearType($name)
