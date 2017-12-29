@@ -18,15 +18,15 @@ return [
      * Same route for both query and mutation
      *
      * 'routes' => [
-     *     'query' => 'query/{graphql_schema?}',
-     *     'mutation' => 'mutation/{graphql_schema?}',
+     *     'query' => 'query/',
+     *     'mutation' => 'mutation/',
      * ]
      *
      * you can also disable routes by setting routes to null
      *
      * 'routes' => null,
      */
-    'routes' => '{graphql_schema?}',
+    'routes' => '',
 
     /*
      * The name of the input variable that contain variables when you query the
@@ -34,18 +34,6 @@ return [
      * In previous versions, the default used to be "params"
      */
     'variables_input_name' => 'variables',
-
-    /*
-     * Any middleware for the 'graphql' route group
-     */
-    'middleware' => [],
-
-    /**
-     * Any middleware for a specific 'graphql' schema
-     */
-    'middleware_schema' => [
-        'default' => [],
-    ],
 
     /*
      * Any headers that will be added to the response returned by the default controller
@@ -57,68 +45,6 @@ return [
      * See http://php.net/manual/function.json-encode.php for the full list of options
      */
     'json_encoding_options' => 0,
-
-    /*
-     * The name of the default schema used when no arguments are provided
-     * to GraphQL::schema() or when the route is used without the graphql_schema
-     * parameter
-     */
-    'schema' => 'default',
-
-    /*
-     * The schemas for query and/or mutation. It expects an array to provide
-     * both the 'query' fields and the 'mutation' fields. You can also
-     * provide an GraphQL\Schema object directly.
-     *
-     * Example:
-     *
-     * 'schemas' => [
-     *     'default' => new Schema($config)
-     * ]
-     *
-     * or
-     *
-     * 'schemas' => [
-     *     'default' => [
-     *         'query' => [
-     *              'users' => 'App\GraphQL\Query\UsersQuery'
-     *          ],
-     *          'mutation' => [
-     *
-     *          ]
-     *     ]
-     * ]
-     */
-    'schemas' => [
-        'default' => [
-            'query' => [
-
-            ],
-            'mutation' => [
-
-            ]
-        ]
-    ],
-
-    /*
-     * The types available in the application. You can access them from the
-     * facade like this: GraphQL::type('user')
-     *
-     * Example:
-     *
-     * 'types' => [
-     *     'user' => 'App\GraphQL\Type\UserType'
-     * ]
-     *
-     * or without specifying a key (it will use the ->name property of your type)
-     *
-     * 'types' =>
-     *     'App\GraphQL\Type\UserType'
-     * ]
-     */
-    'types' => [
-
-    ],
 
     /*
      * Options to limit the query complexity and depth. See the doc

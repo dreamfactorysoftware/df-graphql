@@ -6,14 +6,19 @@
         {
             "name": "Lee Hicks",
             "email": "leehicks@dreamfactory.com",
-            "homepage": "http://dreamfactory.com"
         }
     ],
+    "support":     {
+        "email":  "dspsupport@dreamfactory.com",
+        "source": "https://github.com/dreamfactorysoftware/df-graphql",
+        "issues": "https://github.com/dreamfactorysoftware/df-graphql/issues",
+        "wiki":   "https://wiki.dreamfactory.com"
+    },
     "license": "MIT",
     "type": "project",
     "require": {
         "php": ">=5.5.9",
-        "dreamfactory/df-core": "~0.13.0",
+        "dreamfactory/df-core": "~0.14.0",
         "illuminate/support": "5.1.*|5.2.*|5.3.*|5.4.*|5.5.*",
         "webonyx/graphql-php": "~0.10.2"
     },
@@ -24,7 +29,7 @@
         "phpunit/phpunit": "~4.0|~5.0|~5.7|~6.0"
     },
     "autoload": {
-        "psr-0": {
+        "psr-4": {
             "DreamFactory\\Core\\GraphQL\\": "src/"
         }
     },

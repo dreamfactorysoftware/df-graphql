@@ -33,7 +33,6 @@ class LumenServiceProvider extends ServiceProvider
     protected function bootRouter()
     {
         if ($this->app['config']->get('graphql.routes')) {
-            $router = $this->getRouter();
             include __DIR__.'/../routes/routes.php';
         }
     }
@@ -43,7 +42,7 @@ class LumenServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function registerGraphQL()
+    public function register()
     {
         static $registered = false;
         // Check if facades are activated
@@ -52,6 +51,6 @@ class LumenServiceProvider extends ServiceProvider
             $registered = true;
         }
 
-        parent::registerGraphQL();
+        parent::register();
     }
 }

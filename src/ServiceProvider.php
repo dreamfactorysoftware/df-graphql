@@ -9,11 +9,6 @@ use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
 {
-    protected function getRouter()
-    {
-        return $this->app['router'];
-    }
-
     /**
      * Bootstrap any application services.
      *
@@ -33,28 +28,10 @@ class ServiceProvider extends BaseServiceProvider
      */
     protected function bootRouter()
     {
-        if ($this->app['config']->get('graphql.routes') && !$this->app->routesAreCached()) {
-            $router = $this->getRouter();
-            include __DIR__.'/../routes/routes.php';
+        /** @noinspection PhpUndefinedMethodInspection */
+        if (!$this->app->routesAreCached()) {
+            include __DIR__ . '/../routes/routes.php';
         }
-    }
-
-    /**
-     * Bootstrap events
-     *
-     * @param GraphQL $graphql
-     * @return void
-     */
-    protected function registerEventListeners(GraphQL $graphql)
-    {
-        // Update the schema route pattern when schema is added
-        $this->app['events']->listen(Events\SchemaAdded::class, function () use ($graphql) {
-            $router = $this->getRouter();
-            if (method_exists($router, 'pattern')) {
-                $schemaNames = array_keys($graphql->getSchemas());
-//                $router->pattern('graphql_schema', '('.implode('|', $schemaNames).')');
-            }
-        });
     }
 
     /**
@@ -64,43 +41,9 @@ class ServiceProvider extends BaseServiceProvider
      */
     protected function bootPublishes()
     {
-        $configPath = __DIR__.'/../config';
-
-        $this->mergeConfigFrom($configPath.'/config.php', 'graphql');
-
-        $this->publishes([
-            $configPath.'/config.php' => config_path('graphql.php'),
-        ], 'config');
-    }
-
-    /**
-     * Add types from config
-     *
-     * @param GraphQL $graphql
-     * @return void
-     */
-    protected function addTypes(GraphQL $graphql)
-    {
-        $types = $this->app['config']->get('graphql.types', []);
-
-        foreach ($types as $name => $type) {
-            $graphql->addType($type, is_numeric($name) ? null : $name);
-        }
-    }
-
-    /**
-     * Add schemas from config
-     *
-     * @param GraphQL $graphql
-     * @return void
-     */
-    protected function addSchemas(GraphQL $graphql)
-    {
-        $schemas = $this->app['config']->get('graphql.schemas', []);
-
-        foreach ($schemas as $name => $schema) {
-            $graphql->addSchema($name, $schema);
-        }
+        $configPath = __DIR__ . '/../config';
+        $this->mergeConfigFrom($configPath . '/config.php', 'graphql');
+        $this->publishes([$configPath . '/config.php' => config_path('graphql.php')], 'config');
     }
 
     /**
@@ -139,26 +82,8 @@ class ServiceProvider extends BaseServiceProvider
      */
     public function register()
     {
-        $this->registerGraphQL();
-    }
-
-    /**
-     * Register GraphQL facade
-     *
-     * @return void
-     */
-    protected function registerGraphQL()
-    {
         $this->app->singleton('graphql', function ($app) {
-
             $graphql = new GraphQL($app);
-
-            $this->addTypes($graphql);
-
-            $this->addSchemas($graphql);
-
-            $this->registerEventListeners($graphql);
-
             $this->applySecurityRules();
 
             return $graphql;

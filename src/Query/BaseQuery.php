@@ -22,9 +22,7 @@ class BaseQuery extends Query
 
     public function type()
     {
-        if (($this->type instanceof GraphQL\Type\Definition\ScalarType) ||
-            ($this->type instanceof GraphQL\Type\Definition\ObjectType) ||
-            ($this->type instanceof GraphQL\Type\Definition\ListOfType)) {
+        if ($this->type instanceof GraphQL\Type\Definition\Type) {
             return $this->type;
         }
 
@@ -33,7 +31,11 @@ class BaseQuery extends Query
 
     public function args()
     {
-        return (array)$this->args;
+        $args = [];
+        foreach ((array)$this->args as $key => $arg) {
+            $args[$key] = ['name' => $key, 'type' => GraphQL::type(array_get($arg, 'type'))];
+        }
+        return $args;
     }
 
     public function resolve($root, $args, $context, ResolveInfo $info)
