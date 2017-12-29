@@ -22,48 +22,50 @@ class BaseType extends GraphQLType
         parent::__construct(array_except($attributes, ['set_required', 'for_input']));
     }
 
+    /**
+     * @param      $type
+     * @param null $sub
+     * @return GraphQL\Type\Definition\BooleanType|GraphQL\Type\Definition\FloatType|GraphQL\Type\Definition\IntType|GraphQL\Type\Definition\ListOfType|GraphQL\Type\Definition\StringType
+     * @throws \DreamFactory\Core\GraphQL\Exception\TypeNotFound
+     */
     public static function convertType($type, $sub = null)
     {
         switch ($type) {
-            case DbSimpleTypes::TYPE_BOOLEAN:
-                $type = Type::boolean();
-                break;
-            case DbSimpleTypes::TYPE_ID:
-            case DbSimpleTypes::TYPE_INTEGER:
-            case DbSimpleTypes::TYPE_REF:
-            case DbSimpleTypes::TYPE_USER_ID:
-            case DbSimpleTypes::TYPE_USER_ID_ON_CREATE:
-            case DbSimpleTypes::TYPE_USER_ID_ON_UPDATE:
-                $type = Type::int();
-                break;
-            case DbSimpleTypes::TYPE_DECIMAL:
-            case DbSimpleTypes::TYPE_DOUBLE:
-            case DbSimpleTypes::TYPE_FLOAT:
-                $type = Type::float();
-                break;
-            case DbSimpleTypes::TYPE_BIG_ID:
-            case DbSimpleTypes::TYPE_BIG_INT:
-            case DbSimpleTypes::TYPE_BINARY:
-            case DbSimpleTypes::TYPE_DATE:
-            case DbSimpleTypes::TYPE_DATETIME:
-            case DbSimpleTypes::TYPE_MONEY:
-            case DbSimpleTypes::TYPE_STRING:
-            case DbSimpleTypes::TYPE_TEXT:
-            case DbSimpleTypes::TYPE_TIME:
-            case DbSimpleTypes::TYPE_TIMESTAMP:
-            case DbSimpleTypes::TYPE_TIMESTAMP_ON_CREATE:
-            case DbSimpleTypes::TYPE_TIMESTAMP_ON_UPDATE:
-                $type = Type::string();
-                break;
             case DbSimpleTypes::TYPE_ARRAY:
-                $type = Type::listOf(static::convertType($sub));
+                if ($sub && ($subType = static::convertType($sub))) {
+                    return Type::listOf($subType);
+                } else {
+                    return null;
+                }
                 break;
+            // not sure what to do with these yet
+            case DbSimpleTypes::TYPE_COLUMN:
+            case DbSimpleTypes::TYPE_REF_CURSOR:
+            case DbSimpleTypes::TYPE_ROW:
+            case DbSimpleTypes::TYPE_TABLE:
+                return null;
             default:
-                $type = GraphQL::type($type);
+                switch (DbSimpleTypes::toPhpType($type)) {
+                    case 'array':
+                        if ($sub && ($subType = static::convertType($sub))) {
+                            return Type::listOf($subType);
+                        } else {
+                            return null;
+                        }
+                        break;
+                    case 'boolean':
+                        return Type::boolean();
+                    case 'integer':
+                        return Type::int();
+                    case 'double':
+                        return Type::float();
+                    case 'string':
+                        return Type::string();
+                    default:
+                        return GraphQL::type($type);
+                }
                 break;
         }
-
-        return $type;
     }
 
     /**
@@ -82,9 +84,11 @@ class BaseType extends GraphQLType
                     unset($fields[$name]);
                     continue 1; // todo breaking!
                 }
-                $field['type'] = static::convertType(array_get($field, 'type'), array_get($field, 'items.type'));
-                if ($this->setRequired && array_get_bool($field, 'required')) {
-                    $field['type'] = Type::nonNull($field['type']);
+                if ($type = static::convertType(array_get($field, 'type'), array_get($field, 'items.type'))) {
+                    $field['type'] = $type;
+                    if ($this->setRequired && array_get_bool($field, 'required')) {
+                        $field['type'] = Type::nonNull($type);
+                    }
                 }
             }
 
@@ -103,11 +107,12 @@ class BaseType extends GraphQLType
 
         if ($schema) {
             foreach ($schema->getColumns(true) as $name => $column) {
-                $type = static::convertType($column->type);
-                if ($this->setRequired && $column->getRequired()) {
-                    $type = Type::nonNull($type);
+                if ($type = static::convertType($column->type)) {
+                    if ($this->setRequired && $column->getRequired()) {
+                        $type = Type::nonNull($type);
+                    }
+                    $out[$name] = ['name' => $name, 'type' => $type, 'description' => $column->description];
                 }
-                $out[$name] = ['name' => $name, 'type' => $type, 'description' => $column->description];
             }
             foreach ($schema->getRelations(true) as $name => $relation) {
                 $refTable = $relation->refTable;

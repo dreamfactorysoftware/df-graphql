@@ -2,6 +2,8 @@
 
 namespace DreamFactory\Core\GraphQL\Components;
 
+use DreamFactory\Core\Enums\ApiOptions;
+use DreamFactory\Core\Enums\ServiceTypeGroups;
 use DreamFactory\Core\Enums\Verbs;
 use DreamFactory\Core\GraphQL\Contracts\GraphQLHandlerInterface;
 use DreamFactory\Core\GraphQL\Error\ValidationError;
@@ -38,14 +40,15 @@ class GraphQL
      */
     public function schema()
     {
+        $refresh = \Request::query(ApiOptions::REFRESH);
         $this->clearTypeInstances();
 
         $schema = $this->buildDefaultSchema();
-        foreach (ServiceManager::getServiceNames(true) as $serviceName) {
+        foreach (ServiceManager::getServiceNamesByGroup(ServiceTypeGroups::DATABASE, true) as $serviceName) {
             try {
                 $service = ServiceManager::getService(strtolower($serviceName));
                 if ($service instanceof GraphQLHandlerInterface) {
-                    $content = $service->getGraphQLSchema();
+                    $content = $service->getGraphQLSchema($refresh);
                     if (isset($content['query'])) {
                         $schema['query'] = array_merge((array)array_get($schema, 'query'),
                             (array)$content['query']);
