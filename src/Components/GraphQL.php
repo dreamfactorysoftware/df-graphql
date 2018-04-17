@@ -213,6 +213,7 @@ class GraphQL
 
         $schema = $this->schema();
 
+        set_time_limit(60); //  solving issue https://github.com/dreamfactorysoftware/df-graphql/issues/1
         $result = GraphQLBase::executeAndReturnResult($schema, $query, $root, $context, $variables, $operationName);
 
         if (!empty($result->errors)) {
