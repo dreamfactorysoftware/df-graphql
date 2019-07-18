@@ -18,7 +18,7 @@
     "type": "project",
     "require": {
         "php": ">=5.5.9",
-        "dreamfactory/df-core": "~0.14.0",
+        "dreamfactory/df-core": "~0.15.1",
         "illuminate/support": "5.1.*|5.2.*|5.3.*|5.4.*|5.5.*",
         "webonyx/graphql-php": "~0.10.2"
     },
