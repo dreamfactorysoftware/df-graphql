@@ -16,6 +16,8 @@
     },
     "license": "MIT",
     "type": "project",
+    "minimum-stability": "dev",
+    "prefer-stable":     true,
     "require": {
         "php": ">=5.5.9",
         "dreamfactory/df-core": "~0.15.1",
