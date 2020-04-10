@@ -20,7 +20,7 @@
     "prefer-stable":     true,
     "require": {
         "php": ">=5.5.9",
-        "dreamfactory/df-core": "~0.18.0",
+        "dreamfactory/df-core": "~0.19.0",
         "illuminate/support": "^6.13",
         "webonyx/graphql-php": "~0.10.2"
     },
