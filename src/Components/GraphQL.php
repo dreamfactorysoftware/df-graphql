@@ -213,7 +213,7 @@ class GraphQL
 
         $schema = $this->schema();
 
-        $result = GraphQLBase::executeAndReturnResult($schema, $query, $root, $context, $variables, $operationName);
+        $result = GraphQLBase::executeQuery($schema, $query, $root, $context, $variables, $operationName);
 
         if (!empty($result->errors)) {
             $errorFormatter = config('graphql.error_formatter', [self::class, 'formatError']);
